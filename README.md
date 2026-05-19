@@ -59,28 +59,6 @@ Each change is stored with:
 - Type of action (CREATE / UPDATE / DELETE)
 - Description of the change
 
-## Project Structure
-hospital-project/
-│
-├── app.py
-├── config.py
-├── database.py
-├── models.py
-├── hospital.db
-│
-├── templates/
-│   ├── base.html
-│   ├── login.html
-│   ├── register.html
-│   ├── dashboard.html
-│   ├── update.html
-│   ├── patient_profile.html
-│   ├── appointments.html
-│   ├── activity_logs.html
-│
-├── static/
-│   └── style.css
-
 ## How to Run the Project
 
 ### Install Dependencies
