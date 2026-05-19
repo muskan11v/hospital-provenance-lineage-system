@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="login-container">
+
+    <div class="login-card">
+        <h2>📝 Create Account</h2>
+        <p class="subtitle">Register to access Hospital System</p>
+
+        <form method="POST">
+
+            <div class="input-group">
+                <label>Username</label>
+                <input name="username" placeholder="Enter username" required>
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input name="password" type="password" placeholder="Enter password" required>
+            </div>
+
+            <div class="input-group">
+                <label>Role</label>
+                <select name="role">
+                   <option value="admin">Admin</option>
+                   <option value="doctor">Doctor</option>
+                   <option value="nurse">Nurse</option>
+                   <option value="receptionist">Receptionist</option>
+                   <option value="user">User</option>
+                </select>
+            </div>
+
+            <button class="btn-primary">Create Account</button>
+        </form>
+
+        <div class="login-info">
+            <p>Already have an account?</p>
+            <a href="/" class="btn">Login Here</a>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="form-container">
+
+    <div class="card">
+        <h2>✏️ Update Patient</h2>
+        <p class="subtitle">Modify patient details</p>
+
+        <form method="POST">
+
+            <div class="input-group">
+                <label>Patient Name</label>
+                <input name="name" value="{{p.name}}" required>
+            </div>
+
+            <div class="input-group">
+                <label>Age</label>
+                <input name="age" value="{{p.age}}" required>
+            </div>
+
+            <div class="input-group">
+                <label>Disease</label>
+                <input name="disease" value="{{p.disease}}" required>
+            </div>
+
+            <button class="btn-primary">Update Patient</button>
+        </form>
+
+        <br>
+        <a href="/dashboard" class="btn">⬅ Back to Dashboard</a>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card">
+
+<h2>🖥 Backend Activity Logs</h2>
+<p class="subtitle">
+    Complete audit trail of all backend activities and system actions
+</p>
+
+<table>
+
+<tr>
+    <th>Action</th>
+    <th>User</th>
+    <th>Timestamp</th>
+    <th>Details</th>
+</tr>
+
+{% for log in logs %}
+<tr>
+
+    <td>
+        {% if log.action == 'CREATE' %}
+            <span class="badge create">CREATE</span>
+
+        {% elif log.action == 'UPDATE' %}
+            <span class="badge update">UPDATE</span>
+
+        {% elif log.action == 'DELETE' %}
+            <span class="badge delete">DELETE</span>
+
+        {% else %}
+            {{log.action}}
+        {% endif %}
+    </td>
+
+    <td>👤 {{log.user}}</td>
+
+    <td>{{log.timestamp}}</td>
+
+    <td>{{log.details}}</td>
+
+</tr>
+{% endfor %}
+
+</table>
+
+<br>
+
+<a href="/dashboard" class="btn">
+    ⬅ Back to Dashboard
+</a>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <title>Hospital Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        🏥 <span>Hospital Data Lineage System</span>
+    </div>
+
+    <div class="nav-right">
+        {% if session.user %}
+            <span>👤 {{ session.user }} ({{ session.role }})</span>
+            <a href="/logout" class="btn-danger">Logout</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 🔔 FLASH MESSAGES -->
+<div class="container">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-box">
+                {% for msg in messages %}
+                    <p>{{ msg }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+
+<!-- HERO SECTION -->
+<div class="hero">
+    <img src="https://images.unsplash.com/photo-1580281657527-47f249e8f4df" alt="hospital">
+    <div class="hero-text">
+        <h1>Smart Hospital Management</h1>
+        <p>Track Data Provenance & Lineage in Real-Time</p>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card">
+
+<h2>🔍 Data Lineage</h2>
+<p class="subtitle">Track all changes made to patient data</p>
+
+<table class="lineage-table">
+
+<tr>
+<th>Action</th>
+<th>User</th>
+<th>Timestamp</th>
+<th>Details</th>
+</tr>
+
+{% for l in logs %}
+<tr>
+<td>
+    {% if l.action == 'CREATE' %}
+        <span class="badge create">CREATE</span>
+    {% elif l.action == 'UPDATE' %}
+        <span class="badge update">UPDATE</span>
+    {% elif l.action == 'DELETE' %}
+        <span class="badge delete">DELETE</span>
+    {% else %}
+        {{l.action}}
+    {% endif %}
+</td>
+
+<td>👤 {{l.user}}</td>
+<td>{{l.timestamp}}</td>
+<td>{{l.details}}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+<br>
+<a href="/dashboard" class="btn">⬅ Back to Dashboard</a>
+
+</div>
+
+{% endblock %}

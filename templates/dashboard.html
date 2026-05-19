@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+
+<h1 class="main-title">Smart Hospital Management</h1>
+<p class="sub-title">Track Data Provenance & Lineage in Real-Time</p>
+
+<img src="{{ url_for('static', filename='hospital.png') }}" class="top-image">
+
+<!-- 🔥 NAV BUTTONS -->
+<div class="nav-buttons">
+    <a href="/appointments">Appointments</a>
+    <a href="/activity_logs">Backend Logs</a>
+</div>
+
+<!-- 🔍 SEARCH -->
+<form method="GET" action="/dashboard" class="search-form">
+
+    <input
+        type="text"
+        name="search"
+        placeholder="Search patient or disease..."
+        value="{{search}}"
+    >
+
+    <button type="submit" class="search-btn">
+        🔍 Search
+    </button>
+
+</form>
+
+
+
+<!-- STATS -->
+<div class="stats">
+    <div class="stat-card">
+        <h3>{{ total_patients }}</h3>
+        <p>Total Patients</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>{{ total_doctors }}</h3>
+        <p>Total Doctors</p>
+    </div>
+</div>
+
+<!-- ADD SECTION -->
+<div class="grid">
+
+    <!-- ADD PATIENT -->
+    <div class="card">
+        <h3>➕ Add Patient</h3>
+        <form method="POST" action="/add">
+            <input name="name" placeholder="Name" required>
+            <input name="age" placeholder="Age" required>
+            <input name="disease" placeholder="Disease" required>
+            <button class="btn-primary">Add Patient</button>
+        </form>
+    </div>
+
+    <!-- ADD DOCTOR -->
+    <div class="card">
+        <h3>👨‍⚕️ Add Doctor</h3>
+        <form method="POST" action="/add_doctor">
+            <input name="name" placeholder="Doctor Name" required>
+            <input name="specialization" placeholder="Specialization" required>
+            <button class="btn-primary">Add Doctor</button>
+        </form>
+    </div>
+
+    <!-- APPOINTMENT -->
+    <div class="card">
+        <h3>📅 Book Appointment</h3>
+        <form method="POST" action="/add_appointment">
+
+            <label>Patient</label>
+            <select name="patient_id">
+                {% for p in patients %}
+                    <option value="{{p.id}}">{{p.name}}</option>
+                {% endfor %}
+            </select>
+
+            <label>Doctor</label>
+            <select name="doctor_id">
+                {% for d in doctors %}
+                    <option value="{{d.id}}">{{d.name}} ({{d.specialization}})</option>
+                {% endfor %}
+            </select>
+
+            <input type="date" name="date" required>
+
+            <button class="btn-primary">Book</button>
+        </form>
+    </div>
+
+</div>
+
+<!-- PATIENT TABLE -->
+<div class="card">
+<h3>🧑 Patients</h3>
+<table>
+<tr>
+<th>ID</th><th>Name</th><th>Age</th><th>Disease</th><th>Actions</th>
+</tr>
+
+{% for p in patients %}
+<tr>
+<td>{{p.id}}</td>
+
+<!-- 🔥 CLICKABLE PROFILE -->
+<td>
+    <a href="/patient/{{p.id}}" style="font-weight:bold; color:#3498db;">
+        {{p.name}}
+    </a>
+</td>
+
+<td>{{p.age}}</td>
+<td>{{p.disease}}</td>
+
+<td>
+<a class="btn" href="/update/{{p.id}}">Edit</a>
+
+{% if session['role'] == 'admin' %}
+<a class="btn-danger" href="/delete/{{p.id}}">Delete</a>
+{% endif %}
+
+<a class="btn" href="/lineage/{{p.id}}">Lineage</a>
+</td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+
+<!-- 🔥 APPOINTMENTS TABLE -->
+<div class="card">
+<h3>📅 Appointments</h3>
+
+<table>
+<tr>
+<th>ID</th>
+<th>Patient</th>
+<th>Doctor</th>
+<th>Date</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+
+{% for a in appointments %}
+<tr>
+<td>{{a.id}}</td>
+<td>{{a.patient}}</td>
+<td>{{a.doctor}}</td>
+<td>{{a.date}}</td>
+
+<!-- STATUS BADGES -->
+<td>
+    {% if a.status == 'pending' %}
+        <span class="badge" style="background:orange;">Pending</span>
+    {% elif a.status == 'completed' %}
+        <span class="badge" style="background:green;">Completed</span>
+    {% else %}
+        <span class="badge" style="background:red;">Cancelled</span>
+    {% endif %}
+</td>
+
+<!-- ACTION -->
+<td>
+<a class="btn" href="/update_status/{{a.id}}/completed">✔</a>
+<a class="btn-danger" href="/update_status/{{a.id}}/cancelled">✖</a>
+</td>
+
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

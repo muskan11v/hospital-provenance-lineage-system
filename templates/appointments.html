@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card">
+
+<h2>📅 All Appointments</h2>
+
+<table>
+<tr>
+    <th>ID</th>
+    <th>Patient</th>
+    <th>Doctor</th>
+    <th>Date</th>
+    <th>Status</th>
+</tr>
+
+{% for a in data %}
+<tr>
+    <td>{{a.id}}</td>
+    <td>{{a.patient}}</td>
+    <td>{{a.doctor}}</td>
+    <td>{{a.date}}</td>
+
+    <td>
+        {% if a.status == 'pending' %}
+            <span class="badge" style="background:orange;">Pending</span>
+
+        {% elif a.status == 'completed' %}
+            <span class="badge" style="background:green;">Completed</span>
+
+        {% else %}
+            <span class="badge" style="background:red;">Cancelled</span>
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+
+<br>
+<a href="/dashboard" class="btn">⬅ Back to Dashboard</a>
+
+</div>
+
+{% endblock %}

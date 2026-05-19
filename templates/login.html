@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="login-container">
+
+    <div class="login-card">
+        <h2>🔐 Login</h2>
+        <p class="subtitle">Access Hospital Management System</p>
+
+        <form method="POST">
+            <div class="input-group">
+                <label>Username</label>
+                <input name="username" placeholder="Enter username" required>
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input name="password" type="password" placeholder="Enter password" required>
+            </div>
+
+            <button class="btn-primary">Login</button>
+        </form>
+
+        <!-- NEW REGISTER OPTION -->
+        <p style="margin-top:15px;">
+            Don't have an account? 
+            <a href="/register"><b>Create Account</b></a>
+        </p>
+
+        <div class="login-info">
+            <p><strong>Demo Users:</strong></p>
+            <p>Admin → admin / admin</p>
+            <p>Doctor → doctor1 / doctor</p>
+            <p>Reception → reception / 123</p>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
