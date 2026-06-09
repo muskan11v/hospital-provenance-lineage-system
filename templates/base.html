@@ -51,4 +51,17 @@
 </div>
 
 </body>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const flashBox = document.querySelector(".flash-box");
+
+    if (flashBox) {
+        const messages = flashBox.innerText;
+
+        if (messages.includes("AI Alert")) {
+            alert(messages);
+        }
+    }
+});
+</script>
 </html>

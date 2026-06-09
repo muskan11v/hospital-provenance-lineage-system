@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>AI Anomaly Alerts</h2>
+
+{% if alerts %}
+
+<table border="1">
+
+    <tr>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Timestamp</th>
+    </tr>
+
+    {% for alert in alerts %}
+
+    <tr>
+        <td>{{ alert['alert_type'] }}</td>
+        <td>{{ alert['description'] }}</td>
+        <td>{{ alert['timestamp'] }}</td>
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+{% else %}
+
+<p>No anomalies detected.</p>
+
+{% endif %}
+
+{% endblock %}

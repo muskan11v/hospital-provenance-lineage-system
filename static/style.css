@@ -191,23 +191,29 @@ tr:hover {
 
 /* STATS */
 .stats {
-    display: flex;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
     margin-bottom: 20px;
 }
 
 .stat-card {
-    flex: 1;
     background: linear-gradient(135deg, #ffffff, #e3f2fd);
-    padding: 20px;
+    padding: 15px;
     border-radius: 12px;
     text-align: center;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .stat-card h3 {
-    font-size: 30px;
+    font-size: 24px;
     color: #3498db;
+    margin: 0;
+}
+
+.stat-card p {
+    margin-top: 8px;
+    font-size: 14px;
 }
 
 /* LOGIN */
@@ -302,4 +308,15 @@ tr:hover {
 
 .search-btn {
     width: 180px;
+}
+@media (max-width: 768px) {
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .stats {
+        grid-template-columns: 1fr;
+    }
 }

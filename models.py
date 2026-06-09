@@ -65,6 +65,14 @@ def init_db():
         details TEXT
     )''')
 
+   # ---------- ANOMALY ALERTS ----------
+    cur.execute('''CREATE TABLE IF NOT EXISTS anomaly_alerts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        alert_type TEXT,
+        description TEXT,
+        timestamp TEXT
+    )''')
+
    # ---------- DEFAULT USERS ----------
     cur.execute("INSERT OR IGNORE INTO users VALUES (1,'admin','admin','admin')")
     cur.execute("INSERT OR IGNORE INTO users VALUES (2,'doctor1','doctor','doctor')")
@@ -127,3 +135,4 @@ def log_activity(action, user, details=""):
 
     conn.commit()
     conn.close()
+

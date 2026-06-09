@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="card">
+
+    <h2>🤖 AI Alerts</h2>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Alert Type</th>
+            <th>Description</th>
+            <th>Timestamp</th>
+        </tr>
+
+        {% for alert in alerts %}
+        <tr>
+            <td>{{ alert.id }}</td>
+            <td>{{ alert.alert_type }}</td>
+            <td>{{ alert.description }}</td>
+            <td>{{ alert.timestamp }}</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+</div>
+
+{% endblock %}

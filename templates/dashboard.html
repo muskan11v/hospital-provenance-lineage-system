@@ -12,6 +12,7 @@
 <div class="nav-buttons">
     <a href="/appointments">Appointments</a>
     <a href="/activity_logs">Backend Logs</a>
+    <a href="/alerts">🤖 AI Alerts</a>
 </div>
 
 <!-- 🔍 SEARCH -->
@@ -34,6 +35,7 @@
 
 <!-- STATS -->
 <div class="stats">
+
     <div class="stat-card">
         <h3>{{ total_patients }}</h3>
         <p>Total Patients</p>
@@ -43,7 +45,19 @@
         <h3>{{ total_doctors }}</h3>
         <p>Total Doctors</p>
     </div>
+
+    <div class="stat-card">
+        <h3>{{ total_activities }}</h3>
+        <p>Activities Logged</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>{{ total_alerts }}</h3>
+        <p>AI Alerts</p>
+    </div>
+
 </div>
+    
 
 <!-- ADD SECTION -->
 <div class="grid">

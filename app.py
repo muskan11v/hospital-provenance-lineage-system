@@ -2,12 +2,13 @@ from flask import Flask, render_template, request, redirect, session, url_for, f
 from functools import wraps
 from database import get_db
 from models import init_db, log_provenance, log_activity
+from ai.anomaly_detector import (
+    check_high_activity,
+    check_suspicious_user,
+    check_unusual_access
+)
 import config
 
-app = Flask(__name__)
-app.secret_key = config.SECRET_KEY
-
-init_db()
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
@@ -48,6 +49,9 @@ def login():
         if user:
             session['user'] = user['username']
             session['role'] = user['role']
+
+            if check_unusual_access(session['user']):
+             flash("⚠️ AI Alert: Access Outside Working Hours!")
             flash("Login Successful")
             return redirect('/dashboard')
         else:
@@ -118,12 +122,20 @@ def dashboard():
     cur.execute("SELECT COUNT(*) as total FROM doctors")
     total_doctors = cur.fetchone()['total']
 
+    cur.execute("SELECT COUNT(*) as total FROM activity_log")
+    total_activities = cur.fetchone()['total']
+
+    cur.execute("SELECT COUNT(*) as total FROM anomaly_alerts")
+    total_alerts = cur.fetchone()['total']
+
     return render_template('dashboard.html',
         patients=patients,
         doctors=doctors,
         appointments=appointments,
         total_patients=total_patients,
         total_doctors=total_doctors,
+        total_activities=total_activities,
+        total_alerts=total_alerts,
         search=search
     )
 
@@ -207,6 +219,10 @@ def add():
     session['user'],
     f"Added patient {request.form['name']}"
     )
+    if check_high_activity():
+     flash("⚠️ AI Alert: High Activity Detected!")
+    if check_suspicious_user(session['user']):
+     flash("⚠️ AI Alert: Suspicious User Activity Detected!")
     flash("Patient Added")
     return redirect('/dashboard')
 
@@ -227,6 +243,10 @@ def add_doctor():
     session['user'],
     f"Added doctor {request.form['name']}"
 )
+    if check_high_activity():
+     flash("⚠️ AI Alert: High Activity Detected!")
+    if check_suspicious_user(session['user']):
+     flash("⚠️ AI Alert: Suspicious User Activity Detected!")
     flash("Doctor Added")
     return redirect('/dashboard')
 
@@ -253,6 +273,10 @@ def add_appointment():
     session['user'],
     f"Booked appointment for patient ID {request.form['patient_id']}"
 )
+    if check_high_activity():
+     flash("⚠️ AI Alert: High Activity Detected!")
+    if check_suspicious_user(session['user']):
+     flash("⚠️ AI Alert: Suspicious User Activity Detected!")
     flash("Appointment Booked")
     return redirect('/dashboard')
 
@@ -272,7 +296,10 @@ def update_status(id, status):
     session['user'],
     f"Updated appointment {id} to {status}"
 )
-
+    if check_high_activity():
+     flash("⚠️ AI Alert: High Activity Detected!")
+    if check_suspicious_user(session['user']):
+     flash("⚠️ AI Alert: Suspicious User Activity Detected!")
     flash("Status Updated")
     return redirect('/dashboard')
 
@@ -311,7 +338,10 @@ def update(id):
             session['user'],
             f"Updated patient ID {id}"
         )
-
+        if check_high_activity():
+         flash("⚠️ AI Alert: High Activity Detected!")
+        if check_suspicious_user(session['user']):
+         flash("⚠️ AI Alert: Suspicious User Activity Detected!")
         flash("Patient Updated")
 
         return redirect('/dashboard')
@@ -340,8 +370,11 @@ def delete(id):
 
     log_provenance(id, "DELETE", session['user'], "Deleted via UI")
     log_activity("DELETE", session['user'], f"Deleted patient ID {id}")
-
+    if check_high_activity():
+     flash("⚠️ AI Alert: High Activity Detected!")
     flash("Patient Deleted Successfully")
+    if check_suspicious_user(session['user']):
+     flash("⚠️ AI Alert: Suspicious User Activity Detected!")
     return redirect('/dashboard')
 
 # ---------- DATA LINEAGE ----------
@@ -375,6 +408,51 @@ def activity_logs():
 
     return render_template('activity_logs.html', logs=logs)
 
+# ---------- AI ALERTS ----------
+@app.route('/alerts')
+def alerts():
+
+    if 'user' not in session:
+        return redirect('/')
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM anomaly_alerts
+        ORDER BY id DESC
+    """)
+
+    alerts = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        'alerts.html',
+        alerts=alerts
+    )
+
+@app.route('/ai_alerts')
+def ai_alerts():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM anomaly_alerts
+        ORDER BY id DESC
+    """)
+
+    alerts = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        'ai_alerts.html',
+        alerts=alerts
+    )
 
 
 # ---------- LOGOUT ----------
