@@ -69,6 +69,7 @@
             <input name="name" placeholder="Name" required>
             <input name="age" placeholder="Age" required>
             <input name="disease" placeholder="Disease" required>
+            <input name="phone_number" placeholder="Phone Number" required>
             <button class="btn-primary">Add Patient</button>
         </form>
     </div>
@@ -115,7 +116,7 @@
 <h3>🧑 Patients</h3>
 <table>
 <tr>
-<th>ID</th><th>Name</th><th>Age</th><th>Disease</th><th>Actions</th>
+<th>ID</th><th>Name</th><th>Age</th><th>Disease</th><th>Phone</th><th>Actions</th>
 </tr>
 
 {% for p in patients %}
@@ -131,6 +132,7 @@
 
 <td>{{p.age}}</td>
 <td>{{p.disease}}</td>
+<td>{{p.phone_number}}</td>
 
 <td>
 <a class="btn" href="/update/{{p.id}}">Edit</a>

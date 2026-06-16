@@ -7,7 +7,64 @@
 <p class="subtitle">
     Complete audit trail of all backend activities and system actions
 </p>
+<div class="stats">
 
+    <div class="stat-card">
+        <h3>Total Logs</h3>
+        <p>{{ total_logs }}</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>Create</h3>
+        <p>{{ create_count }}</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>Update</h3>
+        <p>{{ update_count }}</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>Delete</h3>
+        <p>{{ delete_count }}</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>Logins</h3>
+        <p>{{ login_count }}</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>Failed Logins</h3>
+        <p>{{ failed_login_count }}</p>
+    </div>
+
+</div>
+<div class="nav-buttons">
+
+    <a href="/activity_logs">All Logs</a>
+
+    <a href="/activity_logs?action=CREATE">
+        Create
+    </a>
+
+    <a href="/activity_logs?action=UPDATE">
+        Update
+    </a>
+
+    <a href="/activity_logs?action=DELETE">
+        Delete
+    </a>
+
+    <a href="/activity_logs?action=LOGIN">
+        Logins
+    </a>
+
+    <a href="/activity_logs?action=FAILED_LOGIN">
+        Failed Logins
+    </a>
+
+</div>
 <table>
 
 <tr>
@@ -30,8 +87,16 @@
         {% elif log.action == 'DELETE' %}
             <span class="badge delete">DELETE</span>
 
+        {% elif log.action == 'LOGIN' %}
+    <span class="badge login">LOGIN</span>
+
+        {% elif log.action == 'FAILED_LOGIN' %}
+    <span class="badge failed-login">
+        FAILED LOGIN
+    </span>
+
         {% else %}
-            {{log.action}}
+            {{ log.action }}
         {% endif %}
     </td>
 

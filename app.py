@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash
 from functools import wraps
-from database import get_db
-from models import init_db, log_provenance, log_activity
+from database import get_db, init_db
+from models import log_provenance, log_activity
 from ai.anomaly_detector import (
     check_high_activity,
     check_suspicious_user,
@@ -35,26 +35,45 @@ def role_required(allowed_roles):
 
     return decorator
 
+
 # ---------- LOGIN ----------
-@app.route('/', methods=['GET','POST'])
+@app.route('/', methods=['GET', 'POST'])
 def login():
+
     if request.method == 'POST':
         conn = get_db()
         cur = conn.cursor()
 
-        cur.execute("SELECT * FROM users WHERE username=? AND password=?",
-                    (request.form['username'], request.form['password']))
+        cur.execute(
+            "SELECT * FROM users WHERE username=? AND password=?",
+            (request.form['username'], request.form['password'])
+        )
+
         user = cur.fetchone()
 
         if user:
             session['user'] = user['username']
             session['role'] = user['role']
 
+            log_activity(
+                "LOGIN",
+                user['username'],
+                "User logged in successfully"
+            )
+
             if check_unusual_access(session['user']):
-             flash("⚠️ AI Alert: Access Outside Working Hours!")
+                flash("⚠️ AI Alert: Access Outside Working Hours!")
+
             flash("Login Successful")
             return redirect('/dashboard')
+
         else:
+            log_activity(
+                "FAILED_LOGIN",
+                request.form['username'],
+                "Invalid credentials"
+            )
+
             flash("Invalid Credentials")
 
     return render_template('login.html')
@@ -68,13 +87,16 @@ def register():
         cur = conn.cursor()
 
         try:
-            cur.execute("INSERT INTO users (username, password, role) VALUES (?,?,?)",
-                        (request.form['username'],
-                         request.form['password'],
-                         request.form['role']))
+            cur.execute(
+                "INSERT INTO users (username, password, role) VALUES (?,?,?)",
+                (request.form['username'],
+                 request.form['password'],
+                 request.form['role'])
+            )
             conn.commit()
             flash("Account Created Successfully")
             return redirect('/')
+
         except:
             flash("User already exists")
 
@@ -85,6 +107,7 @@ def register():
 @app.route('/dashboard')
 @role_required(['admin','doctor','nurse','receptionist','user'])
 def dashboard():
+
     if 'user' not in session:
         return redirect('/')
 
@@ -95,10 +118,19 @@ def dashboard():
 
     # Patients Search
     if search:
-        cur.execute("SELECT * FROM patients WHERE name LIKE ? OR disease LIKE ?",
-                    (f'%{search}%', f'%{search}%'))
+        cur.execute("""
+            SELECT * FROM patients 
+            WHERE name LIKE ? 
+            OR disease LIKE ? 
+            OR phone_number LIKE ?
+        """, (
+            f'%{search}%',
+            f'%{search}%',
+            f'%{search}%'
+        ))
     else:
         cur.execute("SELECT * FROM patients")
+
     patients = cur.fetchall()
 
     # Doctors
@@ -128,7 +160,8 @@ def dashboard():
     cur.execute("SELECT COUNT(*) as total FROM anomaly_alerts")
     total_alerts = cur.fetchone()['total']
 
-    return render_template('dashboard.html',
+    return render_template(
+        'dashboard.html',
         patients=patients,
         doctors=doctors,
         appointments=appointments,
@@ -143,17 +176,16 @@ def dashboard():
 # ---------- PATIENT PROFILE ----------
 @app.route('/patient/<int:id>')
 def patient_profile(id):
+
     if 'user' not in session:
         return redirect('/')
 
     conn = get_db()
     cur = conn.cursor()
 
-    # Patient
     cur.execute("SELECT * FROM patients WHERE id=?", (id,))
     patient = cur.fetchone()
 
-    # Appointments
     cur.execute("""
         SELECT a.id, d.name as doctor, a.date, a.status
         FROM appointments a
@@ -163,19 +195,21 @@ def patient_profile(id):
     """, (id,))
     appointments = cur.fetchall()
 
-    # Lineage
     cur.execute("SELECT * FROM provenance WHERE patient_id=?", (id,))
     logs = cur.fetchall()
 
-    return render_template('patient_profile.html',
-                           patient=patient,
-                           appointments=appointments,
-                           logs=logs)
+    return render_template(
+        'patient_profile.html',
+        patient=patient,
+        appointments=appointments,
+        logs=logs
+    )
 
 
 # ---------- ALL APPOINTMENTS PAGE ----------
 @app.route('/appointments')
 def appointments_page():
+
     if 'user' not in session:
         return redirect('/')
 
@@ -189,6 +223,7 @@ def appointments_page():
         JOIN doctors d ON a.doctor_id = d.id
         ORDER BY a.date DESC
     """)
+
     data = cur.fetchall()
 
     return render_template('appointments.html', data=data)
@@ -198,31 +233,43 @@ def appointments_page():
 @app.route('/add', methods=['POST'])
 @role_required(['admin','receptionist'])
 def add():
+
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("INSERT INTO patients (name, age, disease) VALUES (?,?,?)",
-                (request.form['name'], request.form['age'], request.form['disease']))
+    cur.execute("""
+        INSERT INTO patients (name, age, disease, phone_number)
+        VALUES (?,?,?,?)
+    """, (
+        request.form['name'],
+        request.form['age'],
+        request.form['disease'],
+        request.form['phone_number']
+    ))
+
     pid = cur.lastrowid
 
     conn.commit()
 
     log_provenance(
-    pid,
-    "CREATE",
-    session['user'],
-    f"Created patient {request.form['name']}"
+        pid,
+        "CREATE",
+        session['user'],
+        f"Created patient {request.form['name']}"
     )
 
     log_activity(
-    "CREATE",
-    session['user'],
-    f"Added patient {request.form['name']}"
+        "CREATE",
+        session['user'],
+        f"Added patient {request.form['name']}"
     )
+
     if check_high_activity():
-     flash("⚠️ AI Alert: High Activity Detected!")
+        flash("⚠️ AI Alert: High Activity Detected!")
+
     if check_suspicious_user(session['user']):
-     flash("⚠️ AI Alert: Suspicious User Activity Detected!")
+        flash("⚠️ AI Alert: Suspicious User Activity Detected!")
+
     flash("Patient Added")
     return redirect('/dashboard')
 
@@ -231,22 +278,29 @@ def add():
 @app.route('/add_doctor', methods=['POST'])
 @role_required(['admin'])
 def add_doctor():
+
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("INSERT INTO doctors (name, specialization) VALUES (?,?)",
-                (request.form['name'], request.form['specialization']))
+    cur.execute(
+        "INSERT INTO doctors (name, specialization) VALUES (?,?)",
+        (request.form['name'], request.form['specialization'])
+    )
 
     conn.commit()
+
     log_activity(
-    "CREATE",
-    session['user'],
-    f"Added doctor {request.form['name']}"
-)
+        "CREATE",
+        session['user'],
+        f"Added doctor {request.form['name']}"
+    )
+
     if check_high_activity():
-     flash("⚠️ AI Alert: High Activity Detected!")
+        flash("⚠️ AI Alert: High Activity Detected!")
+
     if check_suspicious_user(session['user']):
-     flash("⚠️ AI Alert: Suspicious User Activity Detected!")
+        flash("⚠️ AI Alert: Suspicious User Activity Detected!")
+
     flash("Doctor Added")
     return redirect('/dashboard')
 
@@ -255,28 +309,34 @@ def add_doctor():
 @app.route('/add_appointment', methods=['POST'])
 @role_required(['admin','nurse','receptionist'])
 def add_appointment():
+
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("""
         INSERT INTO appointments (patient_id, doctor_id, date, status)
         VALUES (?,?,?,?)
-    """,
-    (request.form['patient_id'],
-     request.form['doctor_id'],
-     request.form['date'],
-     "pending"))
+    """, (
+        request.form['patient_id'],
+        request.form['doctor_id'],
+        request.form['date'],
+        "pending"
+    ))
 
     conn.commit()
+
     log_activity(
-    "CREATE",
-    session['user'],
-    f"Booked appointment for patient ID {request.form['patient_id']}"
-)
+        "CREATE",
+        session['user'],
+        f"Booked appointment for patient ID {request.form['patient_id']}"
+    )
+
     if check_high_activity():
-     flash("⚠️ AI Alert: High Activity Detected!")
+        flash("⚠️ AI Alert: High Activity Detected!")
+
     if check_suspicious_user(session['user']):
-     flash("⚠️ AI Alert: Suspicious User Activity Detected!")
+        flash("⚠️ AI Alert: Suspicious User Activity Detected!")
+
     flash("Appointment Booked")
     return redirect('/dashboard')
 
@@ -285,6 +345,7 @@ def add_appointment():
 @app.route('/update_status/<int:id>/<status>')
 @role_required(['admin','doctor','nurse'])
 def update_status(id, status):
+
     conn = get_db()
     cur = conn.cursor()
 
@@ -292,14 +353,17 @@ def update_status(id, status):
     conn.commit()
 
     log_activity(
-    "UPDATE",
-    session['user'],
-    f"Updated appointment {id} to {status}"
-)
+        "UPDATE",
+        session['user'],
+        f"Updated appointment {id} to {status}"
+    )
+
     if check_high_activity():
-     flash("⚠️ AI Alert: High Activity Detected!")
+        flash("⚠️ AI Alert: High Activity Detected!")
+
     if check_suspicious_user(session['user']):
-     flash("⚠️ AI Alert: Suspicious User Activity Detected!")
+        flash("⚠️ AI Alert: Suspicious User Activity Detected!")
+
     flash("Status Updated")
     return redirect('/dashboard')
 
@@ -314,15 +378,17 @@ def update(id):
 
     if request.method == 'POST':
 
-        cur.execute(
-            "UPDATE patients SET name=?, age=?, disease=? WHERE id=?",
-            (
-                request.form['name'],
-                request.form['age'],
-                request.form['disease'],
-                id
-            )
-        )
+        cur.execute("""
+            UPDATE patients 
+            SET name=?, age=?, disease=?, phone_number=?
+            WHERE id=?
+        """, (
+            request.form['name'],
+            request.form['age'],
+            request.form['disease'],
+            request.form['phone_number'],
+            id
+        ))
 
         conn.commit()
 
@@ -338,12 +404,14 @@ def update(id):
             session['user'],
             f"Updated patient ID {id}"
         )
-        if check_high_activity():
-         flash("⚠️ AI Alert: High Activity Detected!")
-        if check_suspicious_user(session['user']):
-         flash("⚠️ AI Alert: Suspicious User Activity Detected!")
-        flash("Patient Updated")
 
+        if check_high_activity():
+            flash("⚠️ AI Alert: High Activity Detected!")
+
+        if check_suspicious_user(session['user']):
+            flash("⚠️ AI Alert: Suspicious User Activity Detected!")
+
+        flash("Patient Updated")
         return redirect('/dashboard')
 
     cur.execute("SELECT * FROM patients WHERE id=?", (id,))
@@ -351,31 +419,32 @@ def update(id):
 
     return render_template('update.html', p=patient)
 
+
 # ---------- DELETE ----------
 @app.route('/delete/<int:id>')
 @role_required(['admin'])
 def delete(id):
-    if session.get('role') != 'admin':
-        flash("Access Denied")
-        return redirect('/dashboard')
 
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("DELETE FROM appointments WHERE patient_id=?", (id,))
-
     cur.execute("DELETE FROM patients WHERE id=?", (id,))
-    
+
     conn.commit()
 
     log_provenance(id, "DELETE", session['user'], "Deleted via UI")
     log_activity("DELETE", session['user'], f"Deleted patient ID {id}")
+
     if check_high_activity():
-     flash("⚠️ AI Alert: High Activity Detected!")
-    flash("Patient Deleted Successfully")
+        flash("⚠️ AI Alert: High Activity Detected!")
+
     if check_suspicious_user(session['user']):
-     flash("⚠️ AI Alert: Suspicious User Activity Detected!")
+        flash("⚠️ AI Alert: Suspicious User Activity Detected!")
+
+    flash("Patient Deleted Successfully")
     return redirect('/dashboard')
+
 
 # ---------- DATA LINEAGE ----------
 @app.route('/lineage/<int:id>')
@@ -394,20 +463,69 @@ def lineage(id):
 
     return render_template('lineage.html', logs=logs)
 
-# ---------- ACTIVITY LOGS (BACKEND PROOF PAGE) ----------
+
+# ---------- ACTIVITY LOGS ----------
 @app.route('/activity_logs')
 def activity_logs():
+
     if 'user' not in session:
         return redirect('/')
 
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM activity_log ORDER BY timestamp DESC")
+    # Dashboard Statistics
+    cur.execute("SELECT COUNT(*) AS count FROM activity_log")
+    total_logs = cur.fetchone()['count']
+
+    cur.execute("SELECT COUNT(*) AS count FROM activity_log WHERE action='CREATE'")
+    create_count = cur.fetchone()['count']
+
+    cur.execute("SELECT COUNT(*) AS count FROM activity_log WHERE action='UPDATE'")
+    update_count = cur.fetchone()['count']
+
+    cur.execute("SELECT COUNT(*) AS count FROM activity_log WHERE action='DELETE'")
+    delete_count = cur.fetchone()['count']
+
+    cur.execute("SELECT COUNT(*) AS count FROM activity_log WHERE action='LOGIN'")
+    login_count = cur.fetchone()['count']
+
+    cur.execute("SELECT COUNT(*) AS count FROM activity_log WHERE action='FAILED_LOGIN'")
+    failed_login_count = cur.fetchone()['count']
+
+    action = request.args.get('action')
+
+    if action:
+        cur.execute(
+            """
+            SELECT *
+            FROM activity_log
+            WHERE action=?
+            ORDER BY timestamp DESC
+            """,
+            (action,)
+        )
+    else:
+        cur.execute(
+            """
+            SELECT *
+            FROM activity_log
+            ORDER BY timestamp DESC
+            """
+        )
+
     logs = cur.fetchall()
 
-    return render_template('activity_logs.html', logs=logs)
-
+    return render_template(
+        'activity_logs.html',
+        logs=logs,
+        total_logs=total_logs,
+        create_count=create_count,
+        update_count=update_count,
+        delete_count=delete_count,
+        login_count=login_count,
+        failed_login_count=failed_login_count
+    )
 # ---------- AI ALERTS ----------
 @app.route('/alerts')
 def alerts():
@@ -418,20 +536,13 @@ def alerts():
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("""
-        SELECT *
-        FROM anomaly_alerts
-        ORDER BY id DESC
-    """)
-
+    cur.execute("SELECT * FROM anomaly_alerts ORDER BY id DESC")
     alerts = cur.fetchall()
 
     conn.close()
 
-    return render_template(
-        'alerts.html',
-        alerts=alerts
-    )
+    return render_template('alerts.html', alerts=alerts)
+
 
 @app.route('/ai_alerts')
 def ai_alerts():
@@ -439,20 +550,12 @@ def ai_alerts():
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("""
-        SELECT *
-        FROM anomaly_alerts
-        ORDER BY id DESC
-    """)
-
+    cur.execute("SELECT * FROM anomaly_alerts ORDER BY id DESC")
     alerts = cur.fetchall()
 
     conn.close()
 
-    return render_template(
-        'ai_alerts.html',
-        alerts=alerts
-    )
+    return render_template('ai_alerts.html', alerts=alerts)
 
 
 # ---------- LOGOUT ----------
@@ -461,7 +564,7 @@ def logout():
     session.clear()
     flash("Logged out")
     return redirect('/')
-    
+
 
 if __name__ == '__main__':
     app.run(debug=True)

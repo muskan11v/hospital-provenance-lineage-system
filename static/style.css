@@ -192,11 +192,10 @@ tr:hover {
 /* STATS */
 .stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
-
 .stat-card {
     background: linear-gradient(135deg, #ffffff, #e3f2fd);
     padding: 15px;
@@ -213,7 +212,9 @@ tr:hover {
 
 .stat-card p {
     margin-top: 8px;
-    font-size: 14px;
+    font-size: 32px;
+    font-weight: bold;
+    color: #2c3e50;
 }
 
 /* LOGIN */
@@ -272,6 +273,15 @@ tr:hover {
 .badge.delete {
     background: #e74c3c;
 }
+
+.badge.login {
+    background: #8e44ad;
+}
+
+.badge.failed-login {
+    background: #e67e22;
+}
+
 /* NAVIGATION BUTTONS */
 .nav-buttons {
     display: flex;
@@ -308,15 +318,4 @@ tr:hover {
 
 .search-btn {
     width: 180px;
-}
-@media (max-width: 768px) {
-    .stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 480px) {
-    .stats {
-        grid-template-columns: 1fr;
-    }
 }
